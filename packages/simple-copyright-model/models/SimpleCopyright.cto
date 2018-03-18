@@ -17,18 +17,27 @@ namespace com.relateid.simpleCopyrightNetwork
 participant Organization identified by organizationId {
   o String organizationId
   o String name
-  o Boolean trusted
+  o Boolean trusted default=false
 }
 
 participant Person identified by personId {
   o String personId
   o String firstName
   o String lastName
-  o Boolean real
-  o Boolean trusted
-  o String license
-  --> Person    validatedBy
-  --> Organization    validatorFor
+  o Double balance default=0.0
+  o Boolean real default=false
+}
+
+participant Trustee identified by trusteeId {
+  o String trusteeId
+  --> Person person
+  --> Organization organization
+}
+
+transaction TrustPerson {
+  --> Trustee trustee
+  o String firstName
+  o String lastName
 }
 
 asset License identified by licenseId {
@@ -41,6 +50,11 @@ asset Song identified by songId {
   o String name
   o String md5
   --> Person personId
-  --> License    licenseId
 }
 
+asset SoldSong identified by soldSongId {
+  o String soldSongId
+  o Double price
+  --> License licenseId
+  --> Person soldTo
+}
