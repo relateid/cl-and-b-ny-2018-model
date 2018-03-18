@@ -14,47 +14,114 @@
 
 namespace com.relateid.simpleCopyrightNetwork
 
-participant Organization identified by organizationId {
-  o String organizationId
+/**
+ * The types of licenses allowes that could be moved
+ */
+enum LicenseType {
+  o PERSONAL_PLAY
+  o COMMERCIAL_USE
+}
+
+/**
+ * The Base Entity
+ */
+abstract participant Entity identified by entityId {
+  o String entityId
+  o Double balance default=0.0
+}
+
+/**
+ * Information about an organization on the network.
+ */
+participant Organization extends Entity {
   o String name
   o Boolean trusted default=false
 }
 
-participant Person identified by personId {
-  o String personId
+/**
+ * Information about an Person on the network.
+ */
+participant Person extends Entity {
   o String firstName
   o String lastName
-  o Double balance default=0.0
   o Boolean real default=false
 }
 
+/**
+ * Information about an trustee on the network. A trustee (person)
+ * works on behalf of an organization to add people to the network with a level
+ * of trust.
+ */
 participant Trustee identified by trusteeId {
   o String trusteeId
   --> Person person
   --> Organization organization
 }
 
+/**
+ * A licence for the resale of a song by a song reseller to someone.
+ * A song may have may leverage different licenses when being sold.
+ * For example, one time play vs life time play.
+ */
+asset License identified by licenseId {
+  o String   licenseId
+  o LicenseType licenseType
+}
+
+/**
+ * The song created by the artist.
+ */
+asset Song identified by songId {
+  o String   songId
+  o Boolean copyrighted
+  o String name
+  o String hash
+  --> Person owner
+}
+
+/**
+ * An agreement between an artist and an organization to sell their music.
+ */
+asset SongSellingAgreement identified by songSellingAgreementId {
+  o String songSellingAgreementId
+  o Double sellersPercent
+  --> Entity songSeller
+  --> Song song
+  --> License license
+}
+
+/**
+ * An agreement between an artist and an organization to sell their music.
+ */
+asset LicensedSong identified by licensedSongId {
+  o String licensedSongId
+  --> Entity owner
+  --> SongSellingAgreement songSellingAgreement
+}
+
+/**
+ * The transaction when adding a person to the network by a trustee.
+ * This will fail in the event that the trustee.person is not real
+ * of the trustee.organization is not trusted
+ */
 transaction TrustPerson {
   --> Trustee trustee
   o String firstName
   o String lastName
 }
 
-asset License identified by licenseId {
-  o String   licenseId
-}
-
-asset Song identified by songId {
-  o String   songId
-  o Boolean copyrighted
-  o String name
-  o String md5
-  --> Person personId
-}
-
-asset SoldSong identified by soldSongId {
-  o String soldSongId
+/**
+ * The transaction to buy a song.
+ */
+transaction BuySong {
   o Double price
-  --> License licenseId
-  --> Person soldTo
+  --> Entity soldTo
+  --> SongSellingAgreement songSellingAgreement
+}
+
+/**
+ * The transaction that plays a song.
+ */
+transaction RegisterDispute {
+  --> SongSellingAgreement songSellingAgreement
 }
